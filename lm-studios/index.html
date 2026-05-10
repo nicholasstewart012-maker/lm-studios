@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataBridge - Transfer Files & Text Between Machines</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a0a0b0;
+            font-weight: 400;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            cursor: pointer;
+            color: #fff;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(180deg);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            color: #a0a0b0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            color: #1a1a2e;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .upload-area:hover, .upload-area.drag-over {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #a0a0b0;
+            margin-bottom: 5px;
+        }
+
+        .upload-subtext {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .saved-files, .saved-clips {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .file-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .file-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .file-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .clip-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .clip-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .save-clipboard-btn {
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: #1a1a2e;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .save-clipboard-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-size: 1rem;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #00ff88;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <button class="refresh-btn" onclick="refreshData()" title="Refresh">↻</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">DataBridge</div>
+            <p class="subtitle">Transfer files & text between your machines</p>
+            <div class="live-indicator">
+                <span class="live-dot"></span>
+                Live
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('files')">
+                Files ⬡
+            </button>
+            <button class="tab" onclick="switchTab('clipboard')">
+                Text / Clipboard ≡
+            </button>
+        </div>
+
+        <!-- Files Section -->
+        <div id="files" class="section active">
+            <div class="upload-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">⬆</div>
+                <p class="upload-text">Drop files here or click to browse</p>
+                <p class="upload-subtext">Any file type · Multiple files supported</p>
+            </div>
+            <input type="file" id="fileInput" multiple hidden onchange="handleFiles(this.files)">
+
+            <div class="saved-files">
+                <h3 class="section-title">Stored Files (0)</h3>
+                <div id="filesGrid" class="files-grid"></div>
+            </div>
+        </div>
+
+        <!-- Clipboard Section -->
+        <div id="clipboard" class="section">
+            <textarea 
+                placeholder="Paste text or clipboard content here..." 
+                id="clipboardInput"
+                style="width: 100%; min-height: 200px; padding: 20px; border: none; border-radius: 16px; background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 1rem; resize: none;"
+                onpaste="handlePaste(event)"
+            ></textarea>
+            
+            <button class="save-clipboard-btn" onclick="saveClipboard()">
+                ⬆ Save Clip ⌘↵
+            </button>
+
+            <div class="saved-clips">
+                <h3 class="section-title">Saved Clips (0)</h3>
+                <div id="clipsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File storage
+        let files = JSON.parse(localStorage.getItem('dbridge_files')) || [];
+        
+        // Clipboard storage
+        let clips = JSON.parse(localStorage.getItem('dbridge_clips')) || [];
+        let clipboardText = localStorage.getItem('dbridge_clipboard') || '';
+
+        // Initialize
+        renderFiles();
+        renderClips();
+        updateFileCount();
+        updateClipCount();
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            event.target.closest('.tab')?.classList.add('active');
+            document.getElementById(tab)?.classList.add('active');
+
+            if (tab === 'clipboard') {
+                document.getElementById('clipboardInput').value = clipboardText || '';
+            }
+        }
+
+        // File handling
+        const dropArea = document.getElementById('dropArea');
+
+        ['dragenter', 'dragover'].forEach(event => {
+            dropArea.addEventListener(event, (e) => {
+                e.preventDefault();
+                dropArea.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(event => {
+            dropArea.addEventListener(event, (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('drag-over');
+            });
+        });
+
+        dropArea.addEventListener('drop', handleDrop);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const filesArr = dt.files ? Array.from(dt.files) : [];
+            if (filesArr.length) handleFiles(filesArr);
+        }
+
+        function handleFiles(fileList) {
+            if (!fileList || fileList.length === 0) return;
+
+            Array.from(fileList).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    saveFile({
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: e.target.result.substring(0, 10000),
+                        icon: getFileIcon(file.type)
+                    });
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        function saveFile(fileData) {
+            files.push(fileData);
+            localStorage.setItem('dbridge_files', JSON.stringify(files));
+            renderFiles();
+            updateFileCount();
+        }
+
+        function getFileIcon(type) {
+            if (type.includes('image')) return '🖼️';
+            if (type.includes('pdf')) return '📄';
+            if (type.includes('video')) return '🎬';
+            if (type.includes('audio')) return '🎵';
+            if (type.includes('archive')) return '📦';
+            return '📄';
+        }
+
+        function renderFiles() {
+            const grid = document.getElementById('filesGrid');
+            grid.innerHTML = files.map((file, index) => `
+                <div class="file-card" onclick="downloadFile('${index}')">
+                    <div class="file-icon">${file.icon || '📄'}</div>
+                    <div class="file-name">${escapeHtml(file.name)}</div>
+                    <div class="file-meta">${formatSize(file.size)}</div>
+                </div>
+            `).join('');
+        }
+
+        function downloadFile(index) {
+            const file = files[index];
+            const blob = new Blob([atob(file.data)], { type: file.type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function updateFileCount() {
+            document.querySelector('.section-title').innerHTML = `Stored Files (${files.length})`;
+        }
+
+        // Clipboard handling
+        function handlePaste(e) {
+            clipboardText = e.clipboardData.getData('text');
+            localStorage.setItem('dbridge_clipboard', clipboardText);
+            renderClips();
+            updateClipCount();
+        }
+
+        function saveClipboard() {
+            if (!clipboardText.trim()) return;
+
+            const clip = {
+                content: clipboardText,
+                timestamp: new Date().toISOString()
+            };
+
+            clips.unshift(clip);
+            localStorage.setItem('dbridge_clips', JSON.stringify(clips));
+            
+            // Clear clipboard after saving
+            clipboardText = '';
+            localStorage.setItem('dbridge_clipboard', '');
+
+            renderClips();
+            updateClipCount();
+
+            // Show success animation
+            const btn = document.querySelector('.save-clipboard-btn');
+            btn.innerHTML = '✓ Saved!';
+            setTimeout(() => {
+                btn.innerHTML = '⬆ Save Clip ⌘↵';
+            }, 1500);
+        }
+
+        function renderClips() {
+            const container = document.getElementById('clipsContainer');
+            if (clips.length === 0) {
+                container.innerHTML = '<div class="empty-state">No clips yet. Paste something above.</div>';
+                return;
+            }
+
+            container.innerHTML = clips.map((clip, index) => `
+                <div class="clip-item" onclick="pasteClip('${index}')">
+                    <p style="margin-bottom: 5px;"><strong>Clip</strong></p>
+                    <p style="font-size: 0.9rem; color: #ccc; word-break: break-all;">${escapeHtml(clip.content.substring(0, 100) + (clip.content.length > 100 ? '...' : ''))}</p>
+                </div>
+            `).join('');
+        }
+
+        function pasteClip(index) {
+            document.getElementById('clipboardInput').value = clips[index].content;
+            switchTab('clipboard');
+        }
+
+        function updateClipCount() {
+            document.querySelector('.section-title').innerHTML = `Saved Clips (${clips.length})`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function refreshData() {
+            files = JSON.parse(localStorage.getItem('dbridge_files')) || [];
+            clips = JSON.parse(localStorage.getItem('dbridge_clips')) || [];
+            clipboardText = localStorage.getItem('dbridge_clipboard') || '';
+            
+            renderFiles();
+            renderClips();
+            updateFileCount();
+            updateClipCount();
+            
+            if (document.getElementById('clipboard')) {
+                document.getElementById('clipboard').classList.add('active');
+                document.getElementById('clipboardInput').value = clipboardText || '';
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                e.preventDefault();
+                saveClipboard();
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshData();
+            }
+        });
+    </script>
+</body>
+</html>
