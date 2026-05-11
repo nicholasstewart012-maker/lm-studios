@@ -1,0 +1,32 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "0477c05d-a4f5-4858-8ad7-7ffe8b81e7c4",
+  "alias": "CustomerComplaintLauncherWebPart",
+  "componentType": "WebPart",
+
+  // The "*" signifies that the version should be taken from the package.json
+  "version": "*",
+  "manifestVersion": 2,
+
+  // If true, the component can only be installed on sites where Custom Script is allowed.
+  // Components that allow authors to embed arbitrary script code should set this to true.
+  // https://support.office.com/en-us/article/Turn-scripting-capabilities-on-or-off-1f2c515f-5d7e-448a-9fd7-835da935584f
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab", "SharePointFullPage"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [{
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Advanced
+    "group": { "default": "Advanced" },
+    "title": { "default": "Customer Complaint Launcher" },
+    "description": { "default": "Launches the customer complaint app with a signed user token." },
+    "officeFabricIconFontName": "Page",
+    "properties": {
+      "targetUrl": "https://renasantbank.my.site.com/ignite/s/customer-complaint",
+      "sharedSecret": "",
+      "tokenExpirationSeconds": 300,
+      "debugMode": false,
+      "buttonLabel": "Report a Customer Complaint"
+    }
+  }]
+}
